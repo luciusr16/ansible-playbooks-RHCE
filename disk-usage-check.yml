@@ -1,0 +1,23 @@
+---
+
+
+# this is a playbook i wrote which checks the disk usage of all my remote hosts
+# this is vital in keeping your remote hosts in a healthy state 
+# you can automate this process by putting this playbook into a cron job 
+
+- hosts: all
+  become: true  # need to become root as we will need to write to files  
+
+  tasks:
+    - name: check disk usage for remote hosts
+      shell: df -h / | awk 'NR==2 {print $5}' |  tr -d "%" # this strips everyting else out the output and only gives us the actual number  like - 90
+      register: disk_usages  # stores it in variable here
+
+    - name: save alert locally  if any disk are above 90%
+      shell: |
+        echo "$(date) ALERT: {{ inventory_hostname }} is at {{ disk_usages.stdout }}%"  >> /var/log/disk_alerts.log    # appends alert to local file on control node so admins can review it 
+      when: disk_usages.stdout | int > 90    # only prints when the output integer is greater 
+      delegate_to: localhost   # delegates this specific block of code to the localhost so the file is created here instead of all our remote host systems.
+
+
+
