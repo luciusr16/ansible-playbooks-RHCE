@@ -1,0 +1,32 @@
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Ensure groups exist
+      group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - wheel
+        - developers
+
+    - name: Ensure users exist
+      user:
+        name: "{{ item.name }}"
+        groups: "{{ item.groups }}"
+        append: yes
+        state: present
+      loop:
+        - { name: 'user1', groups: 'wheel' }
+        - { name: 'user2', groups: 'developers' }
+
+    - name: Grant sudo privileges
+      copy:
+        dest: "/etc/sudoers.d/{{ item.name }}"
+        content: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
+        owner: root
+        group: root
+        mode: '0440'
+      loop:
+        - { name: 'user1' }
+        - { name: 'user2' }

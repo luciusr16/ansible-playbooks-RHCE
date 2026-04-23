@@ -1,0 +1,31 @@
+- hosts: all
+  become: true
+
+
+  tasks:
+    - name: Create bond interface
+      community.general.nmcli:
+        conn_name: bond0
+        ifname: bond0
+        type: bond
+        mode: active-backup
+        state: present
+
+    - name: Add enp0s8 as slave
+      community.general.nmcli:
+        conn_name: bond-slave-enp0s8
+        ifname: enp0s8
+        type: ethernet
+        master: bond0
+        slave_type: bond
+        state: present
+
+    - name: Add enp0s9 as slave
+      community.general.nmcli:
+        conn_name: bond-slave-enp0s9
+        ifname: enp0s9
+        type: ethernet
+        master: bond0
+        slave_type: bond
+        state: present
+
